@@ -60,47 +60,47 @@
         .hidden-view {
             display: none !important;
         }
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+                <button type="submit" id="login-btn" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    Masuk ke Dasbor <i class="ph ph-arrow-right font-bold"></i>
+                </button>
+            </form>
 
-    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
-
-    <main id="auth-view" class="flex-1 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 fade-in">
-            <div class="text-center mb-8">
-                <div class="bg-primary-100 text-primary-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="ph ph-files text-3xl"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-gray-900">ArsipKu</h1>
-                <p class="text-sm text-gray-500 mt-2">Masuk untuk mengelola foto dan berkas kegiatan harian Anda.</p>
-            </div>
-            
-            <form id="login-form" class="space-y-5">
+            <form id="register-form" class="space-y-5 hidden-view">
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label for="reg-name" class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="ph ph-user"></i>
+                        </div>
+                        <input type="text" id="reg-name" required placeholder="Nama Anda" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
+                    </div>
+                </div>
+                <div>
+                    <label for="reg-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                             <i class="ph ph-envelope"></i>
                         </div>
-                        <input type="email" id="email" required placeholder="email@contoh.com" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
+                        <input type="email" id="reg-email" required placeholder="email@contoh.com" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
                     </div>
                 </div>
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
+                    <label for="reg-password" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                             <i class="ph ph-lock-key"></i>
                         </div>
-                        <input type="password" id="password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
+                        <input type="password" id="reg-password" required placeholder="Buat kata sandi" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
-                    Masuk ke Dasbor <i class="ph ph-arrow-right font-bold"></i>
+                <button type="submit" id="register-btn" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    Daftar Akun <i class="ph ph-user-plus font-bold"></i>
                 </button>
             </form>
+
             <div class="mt-6 text-center text-sm text-gray-500">
-                Belum punya akun? <a href="#" class="text-primary-600 font-medium hover:underline">Daftar sekarang</a> (Simulasi MVP)
+                <span id="auth-prompt-text">Belum punya akun?</span> 
+                <a href="#" id="toggle-auth-btn" class="text-primary-600 font-medium hover:underline">Daftar sekarang</a>
             </div>
         </div>
     </main>
@@ -300,7 +300,7 @@
 
         // Konfigurasi URL Google Apps Script API (Wajib diisi untuk Github Pages)
         // MASUKKAN URL WEB APP GAS ANDA DI SINI SETELAH DEPLOY!
-        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyb-fRi5kVUbr5cY0zxMkhAiHG06mozmv-V6quEc_dKnGSUjQe_lwlfDg9pJOJ372KN/exec'; 
+        const GOOGLE_APPS_SCRIPT_URL = ''; 
 
         // --- DOM Elements ---
         const views = {
@@ -311,6 +311,17 @@
         const ui = {
             loginForm: document.getElementById('login-form'),
             emailInput: document.getElementById('email'),
+            loginBtn: document.getElementById('login-btn'), // Added references
+            
+            registerForm: document.getElementById('register-form'),
+            regNameInput: document.getElementById('reg-name'),
+            regEmailInput: document.getElementById('reg-email'),
+            regPasswordInput: document.getElementById('reg-password'),
+            registerBtn: document.getElementById('register-btn'),
+            
+            toggleAuthBtn: document.getElementById('toggle-auth-btn'),
+            authPromptText: document.getElementById('auth-prompt-text'),
+            
             logoutBtn: document.getElementById('logout-btn'),
             userNameDisplay: document.getElementById('user-name-display'),
             userEmailDisplay: document.getElementById('user-email-display'),
@@ -410,30 +421,108 @@
                 renderDashboard();
             } else {
                 views.auth.classList.remove('hidden-view');
+                ui.loginForm.classList.remove('hidden-view');
+                ui.registerForm.classList.add('hidden-view');
             }
         }
 
-        function handleLogin(e) {
+        let isLoginView = true;
+        ui.toggleAuthBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            isLoginView = !isLoginView;
+            if(isLoginView) {
+                ui.loginForm.classList.remove('hidden-view');
+                ui.registerForm.classList.add('hidden-view');
+                ui.authPromptText.textContent = 'Belum punya akun?';
+                ui.toggleAuthBtn.textContent = 'Daftar sekarang';
+            } else {
+                ui.loginForm.classList.add('hidden-view');
+                ui.registerForm.classList.remove('hidden-view');
+                ui.authPromptText.textContent = 'Sudah punya akun?';
+                ui.toggleAuthBtn.textContent = 'Masuk di sini';
+            }
+        });
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            if (!GOOGLE_APPS_SCRIPT_URL) {
+                showToast('URL Google Apps Script belum diisi.', 'error'); return;
+            }
+
             const email = ui.emailInput.value;
+            const password = document.getElementById('password').value;
             
-            if (email) {
-                state.currentUser = { email: email, name: email.split('@')[0] };
-                ui.userNameDisplay.textContent = state.currentUser.name;
-                ui.userEmailDisplay.textContent = state.currentUser.email;
-                ui.loginForm.reset();
-                showToast('Berhasil masuk ke sistem.');
-                navigateTo('dashboard');
+            const originalBtn = ui.loginBtn.innerHTML;
+            ui.loginBtn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Memeriksa...';
+            ui.loginBtn.disabled = true;
+
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'login', email: email, password: password }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    state.currentUser = result.user;
+                    ui.userNameDisplay.textContent = state.currentUser.name;
+                    ui.userEmailDisplay.textContent = state.currentUser.email;
+                    ui.loginForm.reset();
+                    showToast('Berhasil masuk ke sistem.');
+                    navigateTo('dashboard');
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                ui.loginBtn.innerHTML = originalBtn;
+                ui.loginBtn.disabled = false;
             }
         }
 
-        function handleLogout() {
-            state.currentUser = null;
-            showToast('Anda telah keluar.', 'info');
-            navigateTo('auth');
+        async function handleRegister(e) {
+            e.preventDefault();
+            if (!GOOGLE_APPS_SCRIPT_URL) {
+                showToast('URL Google Apps Script belum diisi.', 'error'); return;
+            }
+
+            const name = ui.regNameInput.value;
+            const email = ui.regEmailInput.value;
+            const password = ui.regPasswordInput.value;
+            
+            const originalBtn = ui.registerBtn.innerHTML;
+            ui.registerBtn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Mendaftar...';
+            ui.registerBtn.disabled = true;
+
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'register', name: name, email: email, password: password }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showToast(result.message);
+                    ui.registerForm.reset();
+                    ui.toggleAuthBtn.click(); // Otomatis kembali ke layar login
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                ui.registerBtn.innerHTML = originalBtn;
+                ui.registerBtn.disabled = false;
+            }
         }
 
         ui.loginForm.addEventListener('submit', handleLogin);
+        ui.registerForm.addEventListener('submit', handleRegister);
         ui.logoutBtn.addEventListener('click', handleLogout);
 
         function renderDashboard() {
@@ -636,6 +725,7 @@
                 
                 if (GOOGLE_APPS_SCRIPT_URL !== '') {
                     const payload = {
+                        action: 'upload', // Menandakan bahwa aksi ini adalah upload, bukan login/register
                         photo: { fileName: state.currentPhoto.name, mimeType: state.currentPhoto.type, fileData: photoBase64 },
                         doc: { fileName: state.currentDoc.name, mimeType: state.currentDoc.type, fileData: docBase64 }
                     };
