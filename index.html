@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Layanan Upload Berkas & Foto Kegiatan</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hide elements utility */
+        .hidden-view {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <main id="auth-view" class="flex-1 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 fade-in">
+            <div class="text-center mb-8">
+                <div class="bg-primary-100 text-primary-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="ph ph-files text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900">ArsipKu</h1>
+                <p class="text-sm text-gray-500 mt-2">Masuk untuk mengelola foto dan berkas kegiatan harian Anda.</p>
+            </div>
+            
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="ph ph-envelope"></i>
+                        </div>
+                        <input type="email" id="email" required placeholder="email@contoh.com" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
+                    </div>
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                            <i class="ph ph-lock-key"></i>
+                        </div>
+                        <input type="password" id="password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    Masuk ke Dasbor <i class="ph ph-arrow-right font-bold"></i>
+                </button>
+            </form>
+            <div class="mt-6 text-center text-sm text-gray-500">
+                Belum punya akun? <a href="#" class="text-primary-600 font-medium hover:underline">Daftar sekarang</a> (Simulasi MVP)
+            </div>
+        </div>
+    </main>
+
+    <div id="dashboard-view" class="hidden-view flex-1 flex flex-col h-screen">
+        
+        <!-- Navbar -->
+        <header class="bg-white shadow-sm sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="bg-primary-100 text-primary-600 w-10 h-10 rounded-lg flex items-center justify-center">
+                        <i class="ph ph-files text-xl font-bold"></i>
+                    </div>
+                    <span class="text-xl font-bold text-gray-900 hidden sm:block">ArsipKu</span>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="text-sm text-right hidden md:block">
+                        <p class="font-medium text-gray-900" id="user-name-display">Pengguna</p>
+                        <p class="text-xs text-gray-500" id="user-email-display">user@example.com</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center text-gray-600 font-bold overflow-hidden">
+                        <i class="ph ph-user text-xl"></i>
+                    </div>
+                    <button id="logout-btn" class="text-gray-500 hover:text-red-500 transition-colors p-2 rounded-md hover:bg-red-50" title="Keluar">
+                        <i class="ph ph-sign-out text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-gray-50">
+            <div class="max-w-7xl mx-auto space-y-6">
+                
+                <!-- Page Header & Actions -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Kegiatan Saya</h2>
+                        <p class="text-gray-500 text-sm mt-1">Kelola dan lihat dokumen serta foto kegiatan Anda.</p>
+                    </div>
+                    <button id="open-upload-btn" class="bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2 justify-center">
+                        <i class="ph ph-upload-simple font-bold text-lg"></i>
+                        Unggah Baru
+                    </button>
+                </div>
+
+                <!-- Filters & Search (Mockup for UI aesthetics) -->
+                <div class="flex flex-col sm:flex-row gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex-1 relative">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" placeholder="Cari kegiatan..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:outline-none text-sm">
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="px-4 py-2 bg-primary-50 text-primary-700 rounded-lg text-sm font-medium border border-primary-100">Semua</button>
+                        <button class="px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium border border-gray-200 hover:bg-gray-100">Foto</button>
+                        <button class="px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium border border-gray-200 hover:bg-gray-100">Berkas</button>
+                    </div>
+                </div>
+
+                <!-- Gallery Grid -->
+                <div id="activities-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Activities will be injected here via JS -->
+                </div>
+                
+                <!-- Empty State -->
+                <div id="empty-state" class="hidden-view bg-white border border-gray-200 border-dashed rounded-2xl p-12 text-center flex flex-col items-center justify-center">
+                    <div class="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mb-4">
+                        <i class="ph ph-folder-open text-4xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-1">Belum ada unggahan</h3>
+                    <p class="text-gray-500 text-sm max-w-sm mb-6">Anda belum mengunggah foto atau berkas kegiatan apapun. Klik tombol di bawah untuk mulai mengarsipkan kegiatan Anda.</p>
+                    <button id="empty-upload-btn" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-lg font-medium transition-colors shadow-sm flex items-center gap-2">
+                        <i class="ph ph-plus-circle font-bold text-lg"></i>
+                        Mulai Mengunggah
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="upload-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden-view">
+        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm modal-overlay" id="modal-backdrop"></div>
+        
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative z-10 flex flex-col max-h-[90vh] fade-in">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-900">Unggah Dokumen/Foto</h3>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto">
+                <form id="upload-form" class="space-y-4">
+                    <div>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Judul Kegiatan <span class="text-red-500">*</span></label>
+                        <input type="text" id="title" required placeholder="Contoh: Rapat Mingguan Divisi IT" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Kegiatan <span class="text-red-500">*</span></label>
+                        <input type="date" id="date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm text-gray-700">
+                    </div>
+                    
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi (Opsional)</label>
+                        <textarea id="description" rows="3" placeholder="Tambahkan catatan atau detail kegiatan..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none text-sm resize-none"></textarea>
+                    </div>
+
+                    <div class="pt-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Dokumentasi & Notulen <span class="text-red-500">*</span></label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            
+                            <!-- Dropzone Foto -->
+                            <div id="photo-drop-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 hover:border-green-500 transition-colors bg-white relative h-40">
+                                <input type="file" id="photo-input" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/jpeg, image/png, image/webp">
+                                
+                                <div id="photo-placeholder" class="flex flex-col items-center pointer-events-none">
+                                    <div class="w-10 h-10 bg-green-50 text-green-500 rounded-full flex items-center justify-center mb-2">
+                                        <i class="ph ph-image text-xl"></i>
+                                    </div>
+                                    <p class="text-xs font-bold text-gray-700">Foto Kegiatan</p>
+                                    <p class="text-[10px] text-gray-500 mt-1">Wajib (JPG/PNG)</p>
+                                </div>
+
+                                <div id="photo-preview" class="hidden-view flex-col items-center justify-center w-full h-full relative z-10 pointer-events-none p-1">
+                                    <img id="image-preview" src="" alt="Preview" class="w-full h-full object-cover rounded-lg shadow-sm border border-gray-100">
+                                    <div class="absolute inset-0 bg-black/50 rounded-lg flex flex-col items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                        <i class="ph ph-arrows-clockwise text-white text-xl mb-1"></i>
+                                        <p class="text-white text-[10px] font-medium">Ubah Foto</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dropzone Notulen -->
+                            <div id="doc-drop-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 hover:border-blue-500 transition-colors bg-white relative h-40">
+                                <input type="file" id="doc-input" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                                
+                                <div id="doc-placeholder" class="flex flex-col items-center pointer-events-none">
+                                    <div class="w-10 h-10 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-2">
+                                        <i class="ph ph-file-text text-xl"></i>
+                                    </div>
+                                    <p class="text-xs font-bold text-gray-700">Berkas Notulen</p>
+                                    <p class="text-[10px] text-gray-500 mt-1">Wajib (PDF/DOCX)</p>
+                                </div>
+
+                                <div id="doc-preview" class="hidden-view flex-col items-center justify-center w-full h-full relative z-10 pointer-events-none bg-blue-50/50 rounded-lg p-2 border border-blue-100">
+                                    <i class="ph ph-file-pdf text-3xl text-red-500 mb-2" id="doc-preview-icon"></i>
+                                    <p id="doc-name-display" class="text-xs font-bold text-blue-900 truncate w-full text-center px-2"></p>
+                                    <p id="doc-size-display" class="text-[10px] text-blue-600 mt-1"></p>
+                                    <div class="absolute inset-0 bg-blue-900/50 rounded-lg flex flex-col items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                        <i class="ph ph-arrows-clockwise text-white text-xl mb-1"></i>
+                                        <p class="text-white text-[10px] font-medium">Ubah Berkas</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50 rounded-b-2xl">
+                <button type="button" id="cancel-upload-btn" class="px-4 py-2 text-gray-700 font-medium hover:bg-gray-200 rounded-lg transition-colors text-sm">Batal</button>
+                <button type="button" id="submit-upload-btn" class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors text-sm flex items-center gap-2">
+                    <i class="ph ph-floppy-disk"></i> Simpan Unggahan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        const state = {
+            currentUser: null,
+            // In-memory data store for the session MVP
+            activities: [
+                // Sample Data showing both Image and Doc in one activity
+                {
+                    id: 'sample-1',
+                    title: 'Inspeksi Lapangan & Rapat Evaluasi Proyek A',
+                    date: '2026-10-07',
+                    description: 'Pengecekan progres pembangunan struktur dasar tahap 1 dilanjutkan dengan evaluasi bersama mandor.',
+                    photoUrl: 'https://placehold.co/600x400/16a34a/ffffff?text=Foto+Inspeksi',
+                    docName: 'Notulensi_Inspeksi_Lapangan_Okt.pdf',
+                    docSize: '1.2 MB',
+                    docUrl: '#',
+                    timestamp: Date.now() - 86400000
+                }
+            ],
+            currentPhoto: null,
+            currentDoc: null
+        };
+
+        // Konfigurasi URL Google Apps Script API (Wajib diisi untuk Github Pages)
+        // MASUKKAN URL WEB APP GAS ANDA DI SINI SETELAH DEPLOY!
+        const GOOGLE_APPS_SCRIPT_URL = ''; 
+
+        // --- DOM Elements ---
+        const views = {
+            auth: document.getElementById('auth-view'),
+            dashboard: document.getElementById('dashboard-view')
+        };
+        
+        const ui = {
+            loginForm: document.getElementById('login-form'),
+            emailInput: document.getElementById('email'),
+            logoutBtn: document.getElementById('logout-btn'),
+            userNameDisplay: document.getElementById('user-name-display'),
+            userEmailDisplay: document.getElementById('user-email-display'),
+            
+            activitiesGrid: document.getElementById('activities-grid'),
+            emptyState: document.getElementById('empty-state'),
+            
+            modal: document.getElementById('upload-modal'),
+            modalBackdrop: document.getElementById('modal-backdrop'),
+            openModalBtn: document.getElementById('open-upload-btn'),
+            emptyUploadBtn: document.getElementById('empty-upload-btn'),
+            closeModalBtn: document.getElementById('close-modal-btn'),
+            cancelUploadBtn: document.getElementById('cancel-upload-btn'),
+            submitUploadBtn: document.getElementById('submit-upload-btn'),
+            
+            uploadForm: document.getElementById('upload-form'),
+            titleInput: document.getElementById('title'),
+            dateInput: document.getElementById('date'),
+            descInput: document.getElementById('description'),
+            
+            // Photo Upload UI
+            photoInput: document.getElementById('photo-input'),
+            photoDropZone: document.getElementById('photo-drop-zone'),
+            photoPlaceholder: document.getElementById('photo-placeholder'),
+            photoPreview: document.getElementById('photo-preview'),
+            imagePreview: document.getElementById('image-preview'),
+
+            // Doc Upload UI
+            docInput: document.getElementById('doc-input'),
+            docDropZone: document.getElementById('doc-drop-zone'),
+            docPlaceholder: document.getElementById('doc-placeholder'),
+            docPreview: document.getElementById('doc-preview'),
+            docIcon: document.getElementById('doc-preview-icon'),
+            docNameDisplay: document.getElementById('doc-name-display'),
+            docSizeDisplay: document.getElementById('doc-size-display'),
+            
+            toastContainer: document.getElementById('toast-container')
+        };
+
+        // --- Helper Functions ---
+        
+        function formatBytes(bytes, decimals = 2) {
+            if (!+bytes) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+        }
+
+        function formatDate(dateString) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const date = new Date(dateString);
+            return date.toLocaleDateString('id-ID', options);
+        }
+
+        function generateId() {
+            return 'act_' + Math.random().toString(36).substr(2, 9) + Date.now();
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            
+            const bgColors = {
+                success: 'bg-white border-l-4 border-green-500',
+                error: 'bg-white border-l-4 border-red-500',
+                info: 'bg-white border-l-4 border-blue-500'
+            };
+
+            const iconColors = {
+                success: 'text-green-500 ph-check-circle',
+                error: 'text-red-500 ph-x-circle',
+                info: 'text-blue-500 ph-info'
+            };
+
+            toast.className = `${bgColors[type]} shadow-lg rounded-r-lg p-4 flex items-center gap-3 fade-in max-w-sm w-full`;
+            toast.innerHTML = `
+                <i class="ph ${iconColors[type]} text-2xl"></i>
+                <p class="text-sm font-medium text-gray-800 flex-1">${message}</p>
+                <button class="text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">
+                    <i class="ph ph-x"></i>
+                </button>
+            `;
+            
+            ui.toastContainer.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'fadeIn 0.3s ease-in-out reverse forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function navigateTo(viewName) {
+            Object.values(views).forEach(v => v.classList.add('hidden-view'));
+            
+            if (viewName === 'dashboard') {
+                views.dashboard.classList.remove('hidden-view');
+                renderDashboard();
+            } else {
+                views.auth.classList.remove('hidden-view');
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = ui.emailInput.value;
+            
+            if (email) {
+                state.currentUser = { email: email, name: email.split('@')[0] };
+                ui.userNameDisplay.textContent = state.currentUser.name;
+                ui.userEmailDisplay.textContent = state.currentUser.email;
+                ui.loginForm.reset();
+                showToast('Berhasil masuk ke sistem.');
+                navigateTo('dashboard');
+            }
+        }
+
+        function handleLogout() {
+            state.currentUser = null;
+            showToast('Anda telah keluar.', 'info');
+            navigateTo('auth');
+        }
+
+        ui.loginForm.addEventListener('submit', handleLogin);
+        ui.logoutBtn.addEventListener('click', handleLogout);
+
+        function renderDashboard() {
+            ui.activitiesGrid.innerHTML = '';
+            
+            if (state.activities.length === 0) {
+                ui.activitiesGrid.classList.add('hidden-view');
+                ui.emptyState.classList.remove('hidden-view');
+            } else {
+                ui.activitiesGrid.classList.remove('hidden-view');
+                ui.emptyState.classList.add('hidden-view');
+                
+                const sortedActivities = [...state.activities].sort((a, b) => b.timestamp - a.timestamp);
+                
+                sortedActivities.forEach(activity => {
+                    const card = createActivityCard(activity);
+                    ui.activitiesGrid.appendChild(card);
+                });
+            }
+        }
+
+        function createActivityCard(activity) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group flex flex-col h-full';
+            
+            card.innerHTML = `
+                <div class="h-48 w-full bg-gray-100 relative overflow-hidden border-b border-gray-100">
+                    <img src="${activity.photoUrl}" alt="${activity.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm shadow-sm flex items-center gap-1">
+                        <i class="ph ph-camera"></i> Foto
+                    </div>
+                </div>
+                
+                <div class="p-4 flex-1 flex flex-col">
+                    <div class="mb-2">
+                        <h3 class="font-bold text-gray-900 leading-tight line-clamp-2" title="${activity.title}">${activity.title}</h3>
+                    </div>
+                    <p class="text-xs text-primary-600 font-medium mb-3 flex items-center gap-1">
+                        <i class="ph ph-calendar-blank"></i> ${formatDate(activity.date)}
+                    </p>
+                    <p class="text-sm text-gray-500 line-clamp-2 mb-4 flex-1">${activity.description || 'Tidak ada deskripsi.'}</p>
+                    
+                    <a href="${activity.docUrl}" target="_blank" rel="noopener noreferrer" class="mt-auto bg-blue-50 hover:bg-blue-100 border border-blue-100 text-blue-700 rounded-lg p-3 flex items-center gap-3 transition-colors text-left group/doc">
+                        <i class="ph ph-file-text text-2xl text-blue-500 group-hover/doc:scale-110 transition-transform"></i>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="text-sm font-bold truncate text-blue-900" title="${activity.docName}">${activity.docName}</p>
+                            <p class="text-xs text-blue-600 font-medium">${activity.docSize}</p>
+                        </div>
+                        <div class="bg-white p-1 rounded-md shadow-sm text-blue-600">
+                            <i class="ph ph-download-simple text-sm"></i>
+                        </div>
+                    </a>
+
+                    <div class="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between">
+                        <span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Telah Diarsipkan</span>
+                        <button class="text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors p-1.5 rounded-md flex items-center gap-1 text-xs font-bold delete-btn" data-id="${activity.id}" title="Hapus Laporan">
+                            <i class="ph ph-trash text-base"></i> Hapus
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            const deleteBtn = card.querySelector('.delete-btn');
+            deleteBtn.addEventListener('click', () => handleDeleteActivity(activity.id));
+
+            return card;
+        }
+
+        function openModal() {
+            ui.modal.classList.remove('hidden-view');
+            const today = new Date().toISOString().split('T')[0];
+            ui.dateInput.value = today;
+        }
+
+        function closeModal() {
+            ui.modal.classList.add('hidden-view');
+            resetUploadForm();
+        }
+
+        function resetUploadForm() {
+            ui.uploadForm.reset();
+            state.currentPhoto = null;
+            state.currentDoc = null;
+            
+            // Reset Photo UI
+            ui.photoInput.value = '';
+            ui.photoPlaceholder.classList.remove('hidden-view');
+            ui.photoPreview.classList.add('hidden-view');
+            ui.photoDropZone.classList.remove('border-green-500', 'bg-green-50');
+            
+            // Reset Doc UI
+            ui.docInput.value = '';
+            ui.docPlaceholder.classList.remove('hidden-view');
+            ui.docPreview.classList.add('hidden-view');
+            ui.docDropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        }
+
+        ui.openModalBtn.addEventListener('click', openModal);
+        ui.emptyUploadBtn.addEventListener('click', openModal);
+        ui.closeModalBtn.addEventListener('click', closeModal);
+        ui.cancelUploadBtn.addEventListener('click', closeModal);
+        ui.modalBackdrop.addEventListener('click', closeModal);
+
+        // -- Photo Drag & Drop --
+        ui.photoInput.addEventListener('change', (e) => handleFileSelect(e, 'photo'));
+        ui.docInput.addEventListener('change', (e) => handleFileSelect(e, 'doc'));
+
+        function setupDragAndDrop(dropZone, inputElement, type) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+            });
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add(`border-${type==='photo'?'green':'blue'}-500`, `bg-${type==='photo'?'green':'blue'}-50`), false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove(`border-${type==='photo'?'green':'blue'}-500`, `bg-${type==='photo'?'green':'blue'}-50`), false);
+            });
+            dropZone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length) {
+                    inputElement.files = files;
+                    handleFileSelect({ target: { files: files } }, type);
+                }
+            }, false);
+        }
+
+        setupDragAndDrop(ui.photoDropZone, ui.photoInput, 'photo');
+        setupDragAndDrop(ui.docDropZone, ui.docInput, 'doc');
+
+        function handleFileSelect(e, type) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                showToast(`Ukuran ${type==='photo'?'foto':'berkas'} maksimal 5MB.`, 'error');
+                e.target.value = '';
+                return;
+            }
+
+            if (type === 'photo') {
+                if (!file.type.startsWith('image/')) {
+                    showToast('Harap unggah format gambar (JPG/PNG).', 'error');
+                    return;
+                }
+                state.currentPhoto = file;
+                ui.photoPlaceholder.classList.add('hidden-view');
+                ui.photoPreview.classList.remove('hidden-view');
+                ui.photoPreview.classList.add('flex');
+                
+                const reader = new FileReader();
+                reader.onload = (e) => ui.imagePreview.src = e.target.result;
+                reader.readAsDataURL(file);
+            } else {
+                state.currentDoc = file;
+                ui.docPlaceholder.classList.add('hidden-view');
+                ui.docPreview.classList.remove('hidden-view');
+                ui.docPreview.classList.add('flex');
+                
+                ui.docNameDisplay.textContent = file.name;
+                ui.docSizeDisplay.textContent = formatBytes(file.size);
+                ui.docIcon.className = 'ph text-4xl mb-2 ' + (file.type.includes('pdf') ? 'ph-file-pdf text-red-500' : 'ph-file-doc text-blue-500');
+            }
+        }
+
+        ui.submitUploadBtn.addEventListener('click', handleSaveUpload);
+
+        async function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleSaveUpload() {
+            if (!ui.titleInput.value || !ui.dateInput.value) {
+                showToast('Mohon lengkapi judul dan tanggal.', 'error'); return;
+            }
+            if (!state.currentPhoto || !state.currentDoc) {
+                showToast('Foto kegiatan DAN Berkas notulen WAJIB dilampirkan.', 'error'); return;
+            }
+
+            const title = ui.titleInput.value;
+            const date = ui.dateInput.value;
+            const desc = ui.descInput.value;
+            
+            const originalBtnHtml = ui.submitUploadBtn.innerHTML;
+            ui.submitUploadBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> Memproses ke Drive...';
+            ui.submitUploadBtn.disabled = true;
+
+            try {
+                // Convert both files
+                const photoBase64 = await fileToBase64(state.currentPhoto);
+                const docBase64 = await fileToBase64(state.currentDoc);
+
+                let drivePhotoUrl = '';
+                let driveDocUrl = '';
+                
+                if (GOOGLE_APPS_SCRIPT_URL !== '') {
+                    const payload = {
+                        photo: { fileName: state.currentPhoto.name, mimeType: state.currentPhoto.type, fileData: photoBase64 },
+                        doc: { fileName: state.currentDoc.name, mimeType: state.currentDoc.type, fileData: docBase64 }
+                    };
+
+                    // Kirim ke Google Apps Script menggunakan API Fetch (HTTP POST) dari Github Pages
+                    const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload),
+                        // Penting: Gunakan text/plain untuk menghindari masalah pemblokiran CORS Preflight dari GAS
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8', 
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        drivePhotoUrl = result.photoUrl;
+                        driveDocUrl = result.docUrl;
+                        showToast('Berkas dan Foto berhasil disimpan ke Google Drive!');
+                    } else {
+                        throw new Error(result.message || 'Server Google gagal memproses.');
+                    }
+                } else {
+                    console.warn("URL Google Apps Script belum diisi. File disimulasikan secara lokal.");
+                    drivePhotoUrl = photoBase64; 
+                    driveDocUrl = '#'; // Mock URL for doc
+                    await new Promise(r => setTimeout(r, 1500));
+                    showToast('Mode lokal (Simulasi). Isi GOOGLE_APPS_SCRIPT_URL untuk mulai menyambungkan ke Drive.', 'info');
+                }
+
+                const newActivity = {
+                    id: generateId(),
+                    title: title,
+                    date: date,
+                    description: desc,
+                    photoUrl: drivePhotoUrl,
+                    docName: state.currentDoc.name,
+                    docSize: formatBytes(state.currentDoc.size),
+                    docUrl: driveDocUrl,
+                    timestamp: Date.now()
+                };
+
+                state.activities.push(newActivity);
+                renderDashboard();
+                closeModal();
+                
+            } catch (error) {
+                console.error("Kesalahan Unggah:", error);
+                showToast('Gagal mengunggah: ' + error.message, 'error');
+            } finally {
+                ui.submitUploadBtn.innerHTML = originalBtnHtml;
+                ui.submitUploadBtn.disabled = false;
+            }
+        }
+
+        function handleDeleteActivity(id) {
+            state.activities = state.activities.filter(act => act.id !== id);
+            renderDashboard();
+            showToast('Laporan berhasil dihapus dari Dasbor.');
+        }
+
+        // Initialize the app state
+        navigateTo('auth'); // Start at login
+        
+    </script>
+</body>
+</html>
